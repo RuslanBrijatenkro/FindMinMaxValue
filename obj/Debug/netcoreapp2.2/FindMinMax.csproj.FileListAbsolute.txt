@@ -1,0 +1,11 @@
+C:\Users\brija\Desktop\'.net'\FindMinMax\obj\Debug\netcoreapp2.2\FindMinMax.csprojAssemblyReference.cache
+C:\Users\brija\Desktop\'.net'\FindMinMax\obj\Debug\netcoreapp2.2\FindMinMax.csproj.CoreCompileInputs.cache
+C:\Users\brija\Desktop\'.net'\FindMinMax\obj\Debug\netcoreapp2.2\FindMinMax.AssemblyInfoInputs.cache
+C:\Users\brija\Desktop\'.net'\FindMinMax\obj\Debug\netcoreapp2.2\FindMinMax.AssemblyInfo.cs
+C:\Users\brija\Desktop\'.net'\FindMinMax\bin\Debug\netcoreapp2.2\FindMinMax.deps.json
+C:\Users\brija\Desktop\'.net'\FindMinMax\bin\Debug\netcoreapp2.2\FindMinMax.runtimeconfig.json
+C:\Users\brija\Desktop\'.net'\FindMinMax\bin\Debug\netcoreapp2.2\FindMinMax.runtimeconfig.dev.json
+C:\Users\brija\Desktop\'.net'\FindMinMax\bin\Debug\netcoreapp2.2\FindMinMax.dll
+C:\Users\brija\Desktop\'.net'\FindMinMax\bin\Debug\netcoreapp2.2\FindMinMax.pdb
+C:\Users\brija\Desktop\'.net'\FindMinMax\obj\Debug\netcoreapp2.2\FindMinMax.dll
+C:\Users\brija\Desktop\'.net'\FindMinMax\obj\Debug\netcoreapp2.2\FindMinMax.pdb
