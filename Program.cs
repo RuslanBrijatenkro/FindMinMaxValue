@@ -4,101 +4,118 @@ using System.Collections;
 using System.Threading;
 using System.Collections.Generic;
 using System.Diagnostics;
+using static System.Console;
+using System.Linq;
 
 namespace FindMinMax
 {
     class FindMinMaxClass
     {
-        static Stopwatch stopwatch;
-        static long onethreadtime;
-        static long multithreadtime;
-        static int count=0;
-        static Mutex countmutex=new Mutex();
-        static int countofnumbers=10000;
-        static List<int> threadspositions= new List<int>();
-        static AutoResetEvent event1=new AutoResetEvent(false);
-        static Mutex maxmutex=new Mutex();
-        static Mutex minmutex=new Mutex();
-        static int minmultithread=1000;
-        static int maxmultithread=-1000;
-        static int minonethread=1000;
-        static int maxonethread=-1000;
-        static Thread thread;
-        static List<int> numbers = new List<int>();
-        static Random random = new Random();
+        static public AutoResetEvent event1=new AutoResetEvent(false);
+        //static public int processorCount = Convert.ToInt32(Environment.ProcessorCount);
+        static public int processorCount = 4;
+        public int[] min = new int[processorCount];
+        public int[] max = new int[processorCount];
+
         static void Main(string[] args)
         {
-            for(int i=0;i<countofnumbers;i++)
-            {
-                numbers.Add(random.Next(-10*minmultithread,-10*maxmultithread));
-            }
-
-            stopwatch=new Stopwatch();
-            stopwatch.Start();
-            FindMinMax();
-            stopwatch.Stop();
-            onethreadtime=stopwatch.ElapsedMilliseconds;
-
-            stopwatch=new Stopwatch();
-            stopwatch.Start();
-            for(int i=0;i<4;i++)
-            {
-                thread = new Thread(FindMinMaxMultiThread);
-               thread.Name=Convert.ToString(i);
-               threadspositions.Add(i*(countofnumbers/4));
-               thread.Start();
-            }
-            event1.WaitOne();
-            stopwatch.Stop();
-            multithreadtime=stopwatch.ElapsedMilliseconds;
-
-            System.Console.WriteLine("4 threads: ");
-            System.Console.WriteLine(multithreadtime);
-            System.Console.WriteLine(maxmultithread);
-            System.Console.WriteLine(minmultithread);
-            System.Console.WriteLine("1 thread: ");
-            System.Console.WriteLine(onethreadtime);
-            System.Console.WriteLine(maxonethread);
-            System.Console.WriteLine(minonethread);
-
+            FindMinMaxClass minMax=new FindMinMaxClass();
+            minMax.Begin();
             Console.ReadKey();
         }
-        static void FindMinMaxMultiThread()
+        public void Begin()
         {
-            while(true)
-            { 
-                if(numbers[threadspositions[Convert.ToInt32(Thread.CurrentThread.Name)]]>=maxmultithread)
-                {
-                    maxmutex.WaitOne();
-                    maxmultithread=numbers[threadspositions[Convert.ToInt32(Thread.CurrentThread.Name)]];
-                    maxmutex.ReleaseMutex();
-                }
-                else if(numbers[threadspositions[Convert.ToInt32(Thread.CurrentThread.Name)]]<=minmultithread)
-                {
-                    minmutex.WaitOne();
-                    minmultithread=numbers[threadspositions[Convert.ToInt32(Thread.CurrentThread.Name)]];
-                    minmutex.ReleaseMutex();
-                }
-                if(threadspositions[Convert.ToInt32(Thread.CurrentThread.Name)]==(Convert.ToInt32(Thread.CurrentThread.Name)+1)*(countofnumbers/4)-1)
-                {
-                    countmutex.WaitOne();
-                    count++;
-                    countmutex.ReleaseMutex();
-                    if(count==4)
-                        event1.Set();
-                    break;         
-                }
-                threadspositions[Convert.ToInt32(Thread.CurrentThread.Name)]++;
+            List<Thread> threads=new List<Thread>();
+            Stopwatch stopwatch=new Stopwatch();;
+            long time;
+            int countofnumbers=10000;
+            Thread thread;
+            List<int> numbers = new List<int>();
+            Random random = new Random();
+
+            for(int i=0;i<countofnumbers;i++)
+            {
+                numbers.Add(random.Next(-10_000,10_000));
             }
+            foreach(var item in min)
+            {
+                min[item]=10000;
+            }
+            foreach(var item in max)
+            {
+                max[item]=-10000;
+            }
+
+            stopwatch.Start();
+            FindMinMax(numbers,countofnumbers,min,max);
+            stopwatch.Stop();
+            time=stopwatch.ElapsedMilliseconds;
+            WriteLine("1 thread: ");
+            WriteLine(time);
+            WriteLine(max[0]);
+            WriteLine(min[0]);
+
+            min[0]=10000;
+            max[0]=-10000;
+
+            stopwatch.Reset();
+
+            stopwatch.Start();
+            for(int i=0;i<processorCount;)
+            {
+                thread = new Thread(delegate() {FindMinMaxMultiThread(i*(countofnumbers/processorCount),numbers,countofnumbers);});
+                thread.IsBackground=false;
+                thread.Start();
+                event1.WaitOne();
+                i++;
+                
+            }
+            System.Console.WriteLine("Hello");
+            for(int i=0;i<processorCount;i++)
+            {
+                event1.WaitOne();
+            }
+            foreach(var item in min)
+            {
+                if(min[0]>item)
+                    min[0]=item;
+            }
+            foreach(var item in max)
+            {
+                if(max[0]<item)
+                    max[0]=item;
+            }
+            stopwatch.Stop();
+            time=stopwatch.ElapsedMilliseconds;
+
+            WriteLine(processorCount+ " threads:");
+            WriteLine(time);
+            WriteLine(max[0]);
+            WriteLine(min[0]);
+           
+            Console.ReadKey();
         }
-        static void FindMinMax()
+        public void FindMinMaxMultiThread(int z, List<int> numbers,int countofnumbers)
+        {
+            int i=z;
+            event1.Set();
+            for(int k=i;k<i+countofnumbers/processorCount;k++)
+            {
+                if(numbers[k]<min[i/(countofnumbers/processorCount)])
+                    min[i/(countofnumbers/processorCount)]=numbers[k];
+                else if(numbers[k]>max[i/(countofnumbers/processorCount)])
+                    max[i/(countofnumbers/processorCount)]=numbers[k];  
+            }
+            event1.Set();
+        }
+        void FindMinMax(List<int> numbers,int countofnumbers,int[] min,int[] max)
         {
             for(int i=0;i<countofnumbers;i++)
             {
-                if(numbers[i]<minonethread)
-                    minonethread=numbers[i];
-                else if(numbers[i]>maxonethread)
-                    maxonethread=numbers[i];
+                if(numbers[i]<min[0])
+                    min[0]=numbers[i];
+                else if(numbers[i]>max[0])
+                    max[0]=numbers[i];
             }
         }
 
