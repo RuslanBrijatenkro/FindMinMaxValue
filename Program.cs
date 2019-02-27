@@ -11,8 +11,10 @@ namespace FindMinMax
 {
     class FindMinMaxClass
     {
-        static public AutoResetEvent event1=new AutoResetEvent(false);
+        static int count=0;
+        static AutoResetEvent event1 = new AutoResetEvent(false);
         //static public int processorCount = Convert.ToInt32(Environment.ProcessorCount);
+        static object newobject = new object();
         static public int processorCount = 4;
         public int[] min = new int[processorCount];
         public int[] max = new int[processorCount];
@@ -28,7 +30,7 @@ namespace FindMinMax
             List<Thread> threads=new List<Thread>();
             Stopwatch stopwatch=new Stopwatch();;
             long time;
-            int countofnumbers=10000;
+            int countofnumbers=1000000000;
             Thread thread;
             List<int> numbers = new List<int>();
             Random random = new Random();
@@ -61,19 +63,16 @@ namespace FindMinMax
             stopwatch.Reset();
 
             stopwatch.Start();
-            for(int i=0;i<processorCount;)
-            {
-                thread = new Thread(delegate() {FindMinMaxMultiThread(i*(countofnumbers/processorCount),numbers,countofnumbers);});
-                thread.IsBackground=false;
-                thread.Start();
-                event1.WaitOne();
-                i++;
-                
-            }
-            System.Console.WriteLine("Hello");
             for(int i=0;i<processorCount;i++)
             {
-                event1.WaitOne();
+                thread = new Thread(delegate() {FindMinMaxMultiThread(count++,numbers,countofnumbers);});
+                threads.Add(thread);
+                thread.IsBackground=false;
+                thread.Start();
+            }
+            foreach(var item in threads)
+            {
+                item.Join();
             }
             foreach(var item in min)
             {
@@ -97,8 +96,7 @@ namespace FindMinMax
         }
         public void FindMinMaxMultiThread(int z, List<int> numbers,int countofnumbers)
         {
-            int i=z;
-            event1.Set();
+            int i=z*(countofnumbers/processorCount);
             for(int k=i;k<i+countofnumbers/processorCount;k++)
             {
                 if(numbers[k]<min[i/(countofnumbers/processorCount)])
@@ -106,7 +104,6 @@ namespace FindMinMax
                 else if(numbers[k]>max[i/(countofnumbers/processorCount)])
                     max[i/(countofnumbers/processorCount)]=numbers[k];  
             }
-            event1.Set();
         }
         void FindMinMax(List<int> numbers,int countofnumbers,int[] min,int[] max)
         {
