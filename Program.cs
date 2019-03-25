@@ -11,12 +11,13 @@ namespace FindMinMax
 {
 	class FindMinMaxClass
 	{
-		static int countofnumbers = 100_000_000;
+		static int countofnumbers = 11;
 		static int count = 0;
+		int runThreads;
 		static AutoResetEvent event1 = new AutoResetEvent(false);
 		//static public int processorCount = Convert.ToInt32(Environment.ProcessorCount);
 		static object newobject = new object();
-		static public int processorCount = 4;
+		static public int processorCount = 2;
 		static int abc = countofnumbers / processorCount;
 		public int[] min = new int[processorCount];
 		public int[] max = new int[processorCount];
@@ -39,6 +40,11 @@ namespace FindMinMax
 			{
 				numbers.Add(random.Next(-10_000, 10_000));
 			}
+			foreach(var ele in numbers)
+			{
+				Console.Write(ele+" ");
+			}
+			Console.WriteLine();
 			foreach (var item in min)
 			{
 				min[item] = 10000;
@@ -63,11 +69,12 @@ namespace FindMinMax
 			stopwatch.Reset();
 
 			stopwatch.Start();
+			runThreads = processorCount;
 			for (int i = 0; i < processorCount; i++)
 			{
 				thread = new Thread(delegate () { FindMinMaxMultiThread(count++, numbers); });
 				threads.Add(thread);
-				thread.IsBackground = false;
+				//thread.IsBackground = false;
 				thread.Start();
 			}
 			event1.WaitOne();
@@ -91,20 +98,25 @@ namespace FindMinMax
 
 			Console.ReadKey();
 		}
-		public void FindMinMaxMultiThread(int z, List<int> numbers)
+		public void FindMinMaxMultiThread(int countz, List<int> numbers)
 		{
-			int i = z * abc;
-			int numberofminormax=i/abc;
-			for (int k = i; k < i + abc; k++)
+			int startIndex = countz * abc;
+			int endIndex;
+			if (countz == processorCount - 1)
+				endIndex = countofnumbers;
+			else
+				endIndex = startIndex + abc;
+			Console.WriteLine("Index "+endIndex);
+			for (int k = startIndex; k < endIndex; k++)
 			{
-				if (numbers[k] < min[numberofminormax])
-					min[numberofminormax] = numbers[k];
-				else if (numbers[k] > max[numberofminormax])
-					max[numberofminormax] = numbers[k];
+				if (numbers[k] < min[countz])
+					min[countz] = numbers[k];
+				if (numbers[k] > max[countz])
+					max[countz] = numbers[k];
 			}
 			lock (newobject)
-				count--;
-			if (count == 0)
+				runThreads--;
+			if (runThreads == 0)
 				event1.Set();
 		}
 		void FindMinMax(List<int> numbers, int countofnumbers, int[] min, int[] max)
